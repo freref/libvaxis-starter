@@ -42,14 +42,17 @@ const MyApp = struct {
     /// A mouse event that we will handle in the draw cycle
     mouse: ?vaxis.Mouse,
 
+    buf: []u8,
+
     pub fn init(allocator: std.mem.Allocator) !MyApp {
-        const buffer = try std.heap.page_allocator.alloc(u8, 4096);
+        const buffer = try allocator.alloc(u8, 4096);
         return .{
             .allocator = allocator,
             .should_quit = false,
             .tty = try vaxis.Tty.init(buffer),
             .vx = try vaxis.init(allocator, .{}),
             .mouse = null,
+            .buf = buffer,
         };
     }
 
@@ -59,6 +62,7 @@ const MyApp = struct {
         // memory
         self.vx.deinit(self.allocator, self.tty.anyWriter());
         self.tty.deinit();
+        self.allocator.free(self.buf);
     }
 
     pub fn run(self: *MyApp) !void {
