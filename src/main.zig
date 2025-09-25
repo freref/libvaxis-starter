@@ -41,18 +41,18 @@ const MyApp = struct {
     vx: vaxis.Vaxis,
     /// A mouse event that we will handle in the draw cycle
     mouse: ?vaxis.Mouse,
-
+    /// A buffer for the TTY
     buf: []u8,
 
     pub fn init(allocator: std.mem.Allocator) !MyApp {
-        const buffer = try allocator.alloc(u8, 4096);
+        const buf = try allocator.alloc(u8, 4096);
         return .{
             .allocator = allocator,
             .should_quit = false,
-            .tty = try vaxis.Tty.init(buffer),
+            .tty = try vaxis.Tty.init(buf),
             .vx = try vaxis.init(allocator, .{}),
             .mouse = null,
-            .buf = buffer,
+            .buf = buf,
         };
     }
 
