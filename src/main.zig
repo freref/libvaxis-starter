@@ -43,10 +43,11 @@ const MyApp = struct {
     mouse: ?vaxis.Mouse,
 
     pub fn init(allocator: std.mem.Allocator) !MyApp {
+        const buffer = try std.heap.page_allocator.alloc(u8, 4096);
         return .{
             .allocator = allocator,
             .should_quit = false,
-            .tty = try vaxis.Tty.init(),
+            .tty = try vaxis.Tty.init(buffer),
             .vx = try vaxis.init(allocator, .{}),
             .mouse = null,
         };
@@ -99,9 +100,9 @@ const MyApp = struct {
 
             // It's best to use a buffered writer for the render method. TTY provides one, but you
             // may use your own. The provided bufferedWriter has a buffer size of 4096
-            var buffered = self.tty.bufferedWriter();
+            var buffered = self.tty.anyWriter();
             // Render the application to the screen
-            try self.vx.render(buffered.writer().any());
+            try self.vx.render(buffered);
             try buffered.flush();
         }
     }
@@ -142,8 +143,8 @@ const MyApp = struct {
         const child = win.child(.{
             .x_off = (win.width / 2) - 7,
             .y_off = win.height / 2 + 1,
-            .width = .{ .limit = msg.len },
-            .height = .{ .limit = 1 },
+            .width = msg.len,
+            .height = 1,
         });
 
         // mouse events are much easier to handle in the draw cycle. Windows have a helper method to
@@ -159,7 +160,7 @@ const MyApp = struct {
         // Print a text segment to the screen. This is a helper function which iterates over the
         // text field for graphemes. Alternatively, you can implement your own print functions and
         // use the writeCell API.
-        _ = try child.printSegment(.{ .text = msg, .style = style }, .{});
+        _ = child.printSegment(.{ .text = msg, .style = style }, .{});
     }
 };
 
